@@ -1,2 +1,2 @@
 # Chainmail
-Loads Fabric mods in Forge enviroments
+Drag 'n Drop solution for loading Fabric mods alongside Forge ones!
