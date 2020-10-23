@@ -40,7 +40,7 @@ public class SimpleConfigWrapper implements IConfigurable {
         config.put("license", modJson.getLicense());
         config.put("mods", Collections.singletonList(new SimpleConfigWrapper(modConfig)));
         config.put("dependencies." + modJson.getModId(), Collections.emptyList());
-        config.put("modproperties." + modJson.getModId(), Collections.emptyMap());
+        config.put("modproperties." + modJson.getModId(), Collections.singletonMap("entrypoints", modJson.getEntrypoints()));
 
         return new SimpleConfigWrapper(config);
     }

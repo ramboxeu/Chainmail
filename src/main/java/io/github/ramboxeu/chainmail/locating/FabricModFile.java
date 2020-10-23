@@ -2,6 +2,7 @@ package io.github.ramboxeu.chainmail.locating;
 
 import io.github.ramboxeu.chainmail.modjson.FabricModJson;
 import io.github.ramboxeu.chainmail.modjson.SimpleConfigWrapper;
+import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.moddiscovery.CoreModFile;
 import net.minecraftforge.fml.loading.moddiscovery.ModFile;
 import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
@@ -14,6 +15,8 @@ import net.minecraftforge.forgespi.locating.IModLocator;
 import net.minecraftforge.forgespi.locating.ModFileFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
+import org.apache.maven.artifact.versioning.VersionRange;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -33,6 +36,7 @@ public class FabricModFile extends ModFile {
 
     private final Path path;
     private final IModLocator locator;
+    private IModLanguageProvider loader;
     private final ModFileFactory.ModFileInfoParser parser;
     private IModFileInfo modFileInfo;
 
@@ -91,11 +95,15 @@ public class FabricModFile extends ModFile {
 
     @Override
     public void identifyLanguage() {
+        // FIXME: 10/23/2020 34 is not a proper loader version (but Forge somehow finds it)
+        try {
+            this.loader = FMLLoader.getLanguageLoadingProvider().findLanguage(this, "fabric", VersionRange.createFromVersionSpec("[34,)"));
+        } catch (InvalidVersionSpecificationException ignored) {}
     }
 
     @Override
     public IModLanguageProvider getLoader() {
-        return null;
+        return loader;
     }
 
     @Override

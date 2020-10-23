@@ -60,6 +60,14 @@ public class FabricModJson {
             this.adapter = adapter;
             this.entrypoint = entrypoint;
         }
+
+        public EntrypointLangAdapter getAdapter() {
+            return adapter;
+        }
+
+        public String getEntrypoint() {
+            return entrypoint;
+        }
     }
 
     public enum EntrypointEnv {
