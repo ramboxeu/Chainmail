@@ -1,16 +1,24 @@
 package io.github.ramboxeu.chainmail.locating;
 
-import io.github.ramboxeu.chainmail.language.FabricModFileInfo;
+import io.github.ramboxeu.chainmail.modjson.FabricModJson;
+import io.github.ramboxeu.chainmail.modjson.SimpleConfigWrapper;
 import net.minecraftforge.fml.loading.moddiscovery.CoreModFile;
 import net.minecraftforge.fml.loading.moddiscovery.ModFile;
+import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
+import net.minecraftforge.forgespi.language.IConfigurable;
 import net.minecraftforge.forgespi.language.IModFileInfo;
 import net.minecraftforge.forgespi.language.IModInfo;
 import net.minecraftforge.forgespi.language.IModLanguageProvider;
+import net.minecraftforge.forgespi.locating.IModFile;
 import net.minecraftforge.forgespi.locating.IModLocator;
 import net.minecraftforge.forgespi.locating.ModFileFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -101,6 +109,43 @@ public class FabricModFile extends ModFile {
     }
 
     public static FabricModFile create(Path file, IModLocator locator) {
-        return new FabricModFile(file, locator, FabricModFileInfo::parseJson);
+        return new FabricModFile(file, locator, FabricModFile::createForgeModFileInfo);
+    }
+
+    private static IModFileInfo createForgeModFileInfo(IModFile modFile) {
+        LOGGER.debug("Potential Fabric mod: {}", modFile.getFilePath());
+        Path modJson = modFile.findResource("fabric.mod.json");
+
+        if (!Files.exists(modJson)) {
+            // Prevent spamming waring for every (possible) Forge mod found
+            if (!Files.exists(modFile.getLocator().findPath(modFile, "META-INF", "mods.toml"))) {
+                LOGGER.warn("Mod file {} is missing fabric.mod.json", modFile);
+                return null;
+            }
+        }
+
+        try {
+            FabricModJson parsedModJson = FabricModJson.parseJson(modJson);
+
+            if (parsedModJson != null) {
+                LOGGER.debug("Found {}@{}", parsedModJson.getModId(), parsedModJson.getVersion());
+
+                try {
+                    // ModFileInfo constructor is package-private, so it has to be instantiated through reflection
+                    Constructor<ModFileInfo> constructor = ModFileInfo.class.getDeclaredConstructor(ModFile.class, IConfigurable.class);
+                    constructor.setAccessible(true);
+
+                    return constructor.newInstance((ModFile) modFile, SimpleConfigWrapper.wrapFabricModJson(parsedModJson));
+                } catch (InstantiationException | IllegalAccessException | NoSuchMethodException e) {
+                    LOGGER.debug("Refection based Forge ModFileInfo creator failed: {}", () -> e);
+                } catch (InvocationTargetException e) {
+                    LOGGER.debug("Refection based Forge ModFileInfo creator failed: {}", e::getTargetException);
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.fatal("Error occurred while trying to parse {} fabric.mod.json: {}", modFile, e);
+        }
+
+        return null;
     }
 }

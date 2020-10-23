@@ -22,30 +22,15 @@ import java.util.regex.Pattern;
 
 import static io.github.ramboxeu.chainmail.modjson.FabricModJson.*;
 
-public class FabricModJsonParser {
+/**
+ * Schema Version 1 fabric.mod.json parser
+ */
+public class FabricModJsonV1Parser {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Pattern MODID_PATTERN = Pattern.compile("^[a-z][a-z0-9-_]{1,63}$"); // Copied from Fabric wiki
 
-    /*
-     * Fails softly. If fabric.mod.json file is invalid the mod will not load, but the game won't crash
-     * Parses only files compatible with Schema Version 1
-     */
-    public static FabricModJson parseJson(Path modJson) throws IOException {
-        JsonElement rootElem = new JsonParser().parse(new JsonReader(Files.newBufferedReader(modJson)));
-
-        if (!rootElem.isJsonObject()) {
-            LOGGER.error("Mod json: {} is invalid, it is not a object", modJson);
-            return null;
-        }
-
-        JsonObject root = rootElem.getAsJsonObject();
-
-        int schemaVersion = getSchemaVersion(root);
-        if (schemaVersion != 1) {
-            LOGGER.error("Mod json: {} is invalid, schemaVersion is invalid or unsupported (by Chainmail)", modJson);
-            return null;
-        }
-
+    // Fails softly. If fabric.mod.json file is invalid the mod will not load, but the game won't crash
+    public static FabricModJson parseJson(JsonObject root, String modJson) throws IOException {
         String modId = getModId(root);
         if (modId == null) {
             LOGGER.error("Mod json: {} is invalid, no valid modid found", modJson);
@@ -59,11 +44,10 @@ public class FabricModJsonParser {
         }
 
         String name = getName(root, modId);
+        String license = getLicense(root);
         Map<EntrypointEnv, List<Entrypoint>> entrypoints = getEntrypoints(root);
 
-        LOGGER.debug("Entrypoints: {}", entrypoints);
-
-        return new FabricModJson(modId, version);
+        return new FabricModJson(modId, license, name, version, entrypoints);
     }
 
     private static int getSchemaVersion(JsonObject root) {
