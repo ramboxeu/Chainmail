@@ -7,6 +7,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,12 +35,12 @@ public class ChainmailSelfModLocator implements IModLocator {
 
     @Override
     public List<IModFile> scanMods() {
-        return null;
+        return Collections.emptyList();
     }
 
     @Override
     public String name() {
-        return null;
+        return "Chainmail self locator";
     }
 
     @Override

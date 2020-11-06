@@ -4,6 +4,8 @@ import net.minecraftforge.forgespi.language.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -27,9 +29,18 @@ public class FabricLanguageProvider implements IModLanguageProvider {
             return modId;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public <T> T loadMod(IModInfo info, ClassLoader modClassLoader, ModFileScanData modFileScanResults) {
-            return null;
+            try {
+                Class<?> fabricContainer = Class.forName("io.github.ramboxeu.chainmail.language.FabricModContainer", true, Thread.currentThread().getContextClassLoader());
+                LOGGER.debug("Loading FabricModContainer from classloader {} - got {}", Thread.currentThread().getContextClassLoader(), fabricContainer.getClassLoader());
+                Constructor<?> constructor = fabricContainer.getConstructor(IModInfo.class);
+                return (T)constructor.newInstance(info);
+            } catch (ClassNotFoundException | NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                LOGGER.fatal("FabricModContainer was not found! ", e);
+                throw new RuntimeException(e);
+            }
         }
     }
 

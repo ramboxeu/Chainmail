@@ -1,0 +1,12 @@
+modLoader="javafml"
+loaderVersion="[34,)"
+issueTrackerURL="https://github.com/ramboxeu/Chainmail/issues"
+license="MIT"
+
+[[mods]]
+modId="chainmail"
+displayName="Chainmail"
+version="${file.jarVersion}"
+logoFile=""
+displayURL="https://ramboxeu.github.io/projects/chainmail"
+description="Forge thing that loads Fabric mods."

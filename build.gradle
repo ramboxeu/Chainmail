@@ -13,7 +13,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
-version = '0.0.1'
+version = '0.10.6'
 group = 'io.github.ramboxeu'
 archivesBaseName = 'chainmail'
 
@@ -63,7 +63,7 @@ minecraft {
 
             mods {
                 chainmail {
-                    sources sourceSets.main, sourceSets.locator
+                    sources sourceSets.main
                 }
             }
         }
@@ -79,7 +79,7 @@ minecraft {
 
             mods {
                 chainmail {
-                    sources sourceSets.main, sourceSets.locator
+                    sources sourceSets.main
                 }
             }
         }
@@ -101,7 +101,7 @@ task langProviderJar(type: Jar) {
                 'Specification-Title': 'Mod Language Provider',
                 'Specification-Vendor': 'Forge Development LLC',
                 'Specification-Version': '1',
-                'Implementation-Title': 'Chainmail',
+                'Implementation-Title': project.name,
                 'Implementation-Version': "$version",
                 'Implementation-Vendor': 'Chainmail'
         ])
@@ -113,7 +113,12 @@ task locatorJar(type: Jar) {
 
     manifest {
         attributes([
-                "Implementation-Version": "$version"
+                'Specification-Title': 'Mod Language Provider',
+                'Specification-Vendor': 'Forge Development LLC',
+                'Specification-Version': '1',
+                'Implementation-Title': "$project.name Locator",
+                'Implementation-Version': "$version",
+                'Implementation-Vendor': 'Chainmail'
         ])
     }
 }

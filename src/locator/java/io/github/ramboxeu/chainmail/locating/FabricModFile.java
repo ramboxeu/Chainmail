@@ -97,7 +97,7 @@ public class FabricModFile extends ModFile {
     public void identifyLanguage() {
         // FIXME: 10/23/2020 34 is not a proper loader version (but Forge somehow finds it)
         try {
-            this.loader = FMLLoader.getLanguageLoadingProvider().findLanguage(this, "fabric", VersionRange.createFromVersionSpec("[34,)"));
+            this.loader = FMLLoader.getLanguageLoadingProvider().findLanguage(this, "fabric", VersionRange.createFromVersionSpec("[0.10.6,)"));
         } catch (InvalidVersionSpecificationException ignored) {}
     }
 
