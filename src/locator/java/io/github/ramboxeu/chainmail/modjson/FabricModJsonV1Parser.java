@@ -3,8 +3,6 @@ package io.github.ramboxeu.chainmail.modjson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
 import io.github.ramboxeu.chainmail.modjson.FabricModJson.Entrypoint;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,10 +10,7 @@ import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static io.github.ramboxeu.chainmail.modjson.FabricModJson.*;
@@ -28,7 +23,7 @@ public class FabricModJsonV1Parser {
     private static final Pattern MODID_PATTERN = Pattern.compile("^[a-z][a-z0-9-_]{1,63}$"); // Copied from Fabric wiki
 
     // Fails softly. If fabric.mod.json file is invalid the mod will not load, but the game won't crash
-    public static FabricModJson parseJson(JsonObject root, String modJson) throws IOException {
+    public static FabricModJson parseJson(JsonObject root, String modJson) {
         String modId = getModId(root);
         if (modId == null) {
             LOGGER.error("Mod json: {} is invalid, no valid modid found", modJson);
@@ -119,7 +114,7 @@ public class FabricModJsonV1Parser {
             JsonElement entrypointsElem = root.get("entrypoints");
 
             if (entrypointsElem.isJsonObject()) {
-                Map<EntrypointEnv, List<Entrypoint>> entrypoints = new HashMap<>(3);
+                Map<EntrypointEnv, List<Entrypoint>> entrypoints = new EnumMap<>(EntrypointEnv.class);
 
                 for (Map.Entry<String, JsonElement> entry : entrypointsElem.getAsJsonObject().entrySet()) {
                     switch (entry.getKey()) {

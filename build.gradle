@@ -32,6 +32,7 @@ sourceSets {
         }
 
         compileClasspath += sourceSets.main.compileClasspath
+        compileClasspath += sourceSets.main.output
     }
 
     main {
