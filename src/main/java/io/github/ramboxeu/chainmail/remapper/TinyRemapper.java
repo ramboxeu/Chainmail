@@ -35,7 +35,7 @@ public class TinyRemapper extends Remapper {
 
     @Override
     public String mapFieldName(String owner, String name, String descriptor) {
-        if (isClassWhitelisted(name)) {
+        if (isClassWhitelisted(owner)) {
             String mappedName = mapName(INameMappingService.Domain.FIELD, name);
             LOGGER.debug("Remapping : Field : {} {} of {}", descriptor, name, owner);
             return mappedName;

@@ -12,9 +12,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-/**
- * Generic language provider. Its job is to delegate the work to specialized loaders according to config
- */
 public class FabricLanguageProvider implements IModLanguageProvider {
     private static final Logger LOGGER = LogManager.getLogger();
 
