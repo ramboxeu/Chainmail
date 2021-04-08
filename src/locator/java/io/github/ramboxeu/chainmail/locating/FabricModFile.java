@@ -1,7 +1,7 @@
 package io.github.ramboxeu.chainmail.locating;
 
+import io.github.ramboxeu.chainmail.modjson.ConfigWrapper;
 import io.github.ramboxeu.chainmail.modjson.FabricModJson;
-import io.github.ramboxeu.chainmail.modjson.SimpleConfigWrapper;
 import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.moddiscovery.CoreModFile;
 import net.minecraftforge.fml.loading.moddiscovery.ModFile;
@@ -59,6 +59,11 @@ public class FabricModFile extends ModFile {
     }
 
     @Override
+    public void identifyLanguage() {
+        this.loader = FMLLoader.getLanguageLoadingProvider().findLanguage(this, this.modFileInfo.getModLoader(), this.modFileInfo.getModLoaderVersion());
+    }
+
+    @Override
     public Optional<Path> getAccessTransformer() {
         return Optional.empty();
     }
@@ -91,14 +96,6 @@ public class FabricModFile extends ModFile {
     @Override
     public Type getType() {
         return Type.MOD;
-    }
-
-    @Override
-    public void identifyLanguage() {
-        // FIXME: 10/23/2020 34 is not a proper loader version (but Forge somehow finds it)
-        try {
-            this.loader = FMLLoader.getLanguageLoadingProvider().findLanguage(this, "fabric", VersionRange.createFromVersionSpec("[0.10.6,)"));
-        } catch (InvalidVersionSpecificationException ignored) {}
     }
 
     @Override
@@ -143,7 +140,7 @@ public class FabricModFile extends ModFile {
                     Constructor<ModFileInfo> constructor = ModFileInfo.class.getDeclaredConstructor(ModFile.class, IConfigurable.class);
                     constructor.setAccessible(true);
 
-                    return constructor.newInstance((ModFile) modFile, SimpleConfigWrapper.wrapFabricModJson(parsedModJson));
+                    return constructor.newInstance((ModFile) modFile, ConfigWrapper.Builder.fromJson(parsedModJson));
                 } catch (InstantiationException | IllegalAccessException | NoSuchMethodException e) {
                     LOGGER.debug("Refection based Forge ModFileInfo creator failed: {}", () -> e);
                 } catch (InvocationTargetException e) {

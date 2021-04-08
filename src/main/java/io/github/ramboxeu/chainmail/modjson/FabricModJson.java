@@ -7,11 +7,11 @@ import com.google.gson.stream.JsonReader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.VersionRange;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -21,15 +21,21 @@ public class FabricModJson {
     private final String modId;
     private final String license;
     private final String name;
+    private final String issuesUrl;
     private final ArtifactVersion version;
     private final Map<EntrypointEnv, List<Entrypoint>> entrypoints;
+    private final List<Dependency> dependencies;
+    private final List<String> nestedJars;
 
-    public FabricModJson(String modId, String license, String name, ArtifactVersion version, Map<EntrypointEnv, List<Entrypoint>> entrypoints) {
+    public FabricModJson(String modId, String license, String name, String issuesUrl, ArtifactVersion version, Map<EntrypointEnv, List<Entrypoint>> entrypoints, List<Dependency> dependencies, List<String> nestedJars) {
         this.modId = modId;
         this.license = license;
         this.name = name;
+        this.issuesUrl = issuesUrl;
         this.version = version;
-        this.entrypoints = entrypoints != null ? entrypoints : Collections.emptyMap();
+        this.entrypoints = entrypoints;
+        this.dependencies = dependencies;
+        this.nestedJars = nestedJars;
     }
 
     public String getModId() {
@@ -50,6 +56,18 @@ public class FabricModJson {
 
     public Map<EntrypointEnv, List<Entrypoint>> getEntrypoints() {
         return entrypoints;
+    }
+
+    public String getIssues() {
+        return issuesUrl;
+    }
+
+    public List<Dependency> getDependencies() {
+        return dependencies;
+    }
+
+    public List<String> getNestedJars() {
+        return nestedJars;
     }
 
     public static class Entrypoint {
@@ -90,6 +108,30 @@ public class FabricModJson {
 
         public String getName() {
             return forgeName;
+        }
+    }
+
+    public static class Dependency {
+        private final String id;
+        private final VersionRange version;
+        private final boolean mandatory;
+
+        public Dependency(String id, VersionRange version, boolean mandatory) {
+            this.id = id;
+            this.version = version;
+            this.mandatory = mandatory;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public VersionRange getVersion() {
+            return version;
+        }
+
+        public boolean isMandatory() {
+            return mandatory;
         }
     }
 

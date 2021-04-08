@@ -2,6 +2,7 @@ package io.github.ramboxeu.chainmail.language;
 
 import io.github.ramboxeu.chainmail.container.IModInstanceWrapper;
 import io.github.ramboxeu.chainmail.container.ModInstanceWrapperBuilder;
+import io.github.ramboxeu.chainmail.modjson.FabricModJson;
 import io.github.ramboxeu.chainmail.utils.Utils;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fml.ModContainer;
@@ -24,8 +25,8 @@ public class FabricModContainer extends ModContainer {
     public FabricModContainer(IModInfo info) {
         super(info);
 
-        Map<String, List<String>> entrypoints = Utils.getEntrypoints(info);
-        if (!entrypoints.isEmpty()) {
+        List<ModInstanceWrapperBuilder.Entrypoint> entrypoints = Utils.getEntrypoints(info);
+//        if (!entrypoints.isEmpty()) {
             try {
                 // This should maybe get moved to construct event
                 instance = new ModInstanceWrapperBuilder(entrypoints, modId).assembleClass().newInstance();
@@ -33,9 +34,9 @@ public class FabricModContainer extends ModContainer {
                 LOGGER.error("Error while constructing {} wrapper", modId, e);
                 throw new RuntimeException(e);
             }
-        } else {
-            throw new IllegalStateException("Empty entrypoints array");
-        }
+//        } else {
+//            throw new IllegalStateException("Empty entrypoints array");
+//        }
 
         LOGGER.debug("Constructed container for: {}", info.getModId());
 

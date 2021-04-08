@@ -8,8 +8,6 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import static org.objectweb.asm.Opcodes.*;
 
@@ -20,13 +18,11 @@ public class ModInstanceWrapperBuilder {
     private static final Type WRAPPER_TYPE = Type.getType(IModInstanceWrapper.class);
 
     private final String className;
-    private final Map<String, List<String>> entrypoints;
     private final List<Entrypoint> classes;
 
-    public ModInstanceWrapperBuilder(Map<String, List<String>> entrypoints, String modId) {
-        this.entrypoints = entrypoints;
+    public ModInstanceWrapperBuilder(List<Entrypoint> classes, String modId) {
         this.className = modId + "_Instance";
-        this.classes = getClasses();
+        this.classes = classes;
     }
 
     @SuppressWarnings("unchecked")
@@ -125,17 +121,6 @@ public class ModInstanceWrapperBuilder {
         visitor.visitEnd();
     }
 
-    private List<Entrypoint> getClasses() {
-        return entrypoints.entrySet().stream()
-                .flatMap(entry -> entry.getValue()
-                        .stream()
-                        .distinct()
-                        .map(e -> new Entrypoint(e, entry.getKey())
-                        )
-                )
-                .collect(Collectors.toList());
-    }
-
     private static String getFieldName(String name) {
         String[] parts = name.split("\\.");
         return parts[parts.length - 1] + "Instance";
@@ -157,27 +142,33 @@ public class ModInstanceWrapperBuilder {
         }
     }
 
-    private static class Entrypoint {
+    public static class Entrypoint {
         private final Type type;
+        private final Environment env;
         private final String fieldName;
-        private final String env;
 
-        public Entrypoint(String type, String env) {
+        public Entrypoint(String type, Environment env) {
             this.type = Type.getType("L" + type.replace('.', '/') + ";");
             this.fieldName = env + getFieldName(type);
             this.env = env;
         }
 
         public boolean isClient() {
-            return env.equals("client");
+            return env == Environment.CLIENT;
         }
 
         public boolean isServer() {
-            return env.equals("server");
+            return env == Environment.SERVER;
         }
 
         public boolean isCommon() {
-            return env.equals("main");
+            return env == Environment.COMMON;
         }
+    }
+
+    public enum Environment {
+        CLIENT,
+        SERVER,
+        COMMON;
     }
 }

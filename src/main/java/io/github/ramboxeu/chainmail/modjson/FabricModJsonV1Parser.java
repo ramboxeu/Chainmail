@@ -4,12 +4,16 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import io.github.ramboxeu.chainmail.modjson.FabricModJson.Entrypoint;
+import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
+import net.minecraftforge.forgespi.language.IModFileInfo;
+import net.minecraftforge.forgespi.locating.IModFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.apache.maven.artifact.versioning.InvalidVersionSpecificationException;
+import org.apache.maven.artifact.versioning.VersionRange;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -39,22 +43,116 @@ public class FabricModJsonV1Parser {
         String name = getName(root, modId);
         String license = getLicense(root);
         Map<EntrypointEnv, List<Entrypoint>> entrypoints = getEntrypoints(root);
+        List<Dependency> dependencies = getDependencies(root);
+        List<String> nestedJars = getNestedJars(root);
 
-        return new FabricModJson(modId, license, name, version, entrypoints);
+        return new FabricModJson(modId, license, name, "", version, entrypoints, dependencies, nestedJars);
     }
 
-    private static int getSchemaVersion(JsonObject root) {
-        if (root.has("schemaVersion")) {
-            JsonElement schemaElem = root.get("schemaVersion");
+    private static List<String> getNestedJars(JsonObject root) {
+        if (root.has("jars")) {
+            JsonElement jarsElem = root.get("jars");
 
-            if (schemaElem.isJsonPrimitive()) {
-                try {
-                    return schemaElem.getAsInt();
-                } catch(NumberFormatException ignored) {}
+            if (jarsElem.isJsonArray()) {
+                List<String> nestedJars = new ArrayList<>();
+
+                for (JsonElement jarEntryElem : jarsElem.getAsJsonArray()) {
+                    if (jarEntryElem.isJsonObject()) {
+                        JsonObject jarEntryObj = jarEntryElem.getAsJsonObject();
+
+                        if (jarEntryObj.has("file")) {
+                            JsonElement fileElem = jarEntryObj.get("file");
+
+                            if (fileElem.isJsonPrimitive()) {
+                                nestedJars.add(fileElem.getAsString());
+                            }
+                        }
+                    }
+                }
+
+                return nestedJars;
             }
         }
 
-        return -1;
+        return Collections.emptyList();
+    }
+
+    private static List<Dependency> getDependencies(JsonObject root) {
+        List<Dependency> dependencies = Collections.emptyList();
+
+        if (root.has("depends")) {
+            JsonElement dependenciesElem = root.get("depends");
+
+            if (dependenciesElem.isJsonObject()) {
+                dependencies = getDependencies(dependenciesElem.getAsJsonObject().entrySet(), true);
+            }
+        }
+
+        if (root.has("recommends")) {
+            JsonElement dependenciesElem = root.get("recommends");
+
+            if (dependenciesElem.isJsonObject()) {
+                List<Dependency> deps = getDependencies(dependenciesElem.getAsJsonObject().entrySet(), false);
+
+                if (dependencies.isEmpty()) {
+                    dependencies = deps;
+                } else {
+                    dependencies.addAll(deps);
+                }
+            }
+        }
+
+        return dependencies;
+    }
+
+    private static List<Dependency> getDependencies(Set<Map.Entry<String, JsonElement>> element, boolean mandatory) {
+        List<Dependency> dependencies = new ArrayList<>();
+
+        for (Map.Entry<String, JsonElement> dependency : element) {
+            JsonElement dependencyElem = dependency.getValue();
+
+            if (dependencyElem.isJsonPrimitive()) {
+                VersionRange version = parseVersionRange(dependencyElem.getAsString());
+
+                if (version != null) {
+                    dependencies.add(new Dependency(dependency.getKey(), version, mandatory));
+                }
+            }
+        }
+
+        return dependencies;
+    }
+
+    // Rudimentary NPM semver parser
+    private static VersionRange parseVersionRange(String range) {
+        try {
+            char a = range.charAt(0);
+
+            if (range.length() > 2) {
+                char b = range.charAt(1);
+
+                if (a == '>' && b == '=') {
+                    return VersionRange.createFromVersionSpec("[" + range.substring(2) + ",)");
+                } else if (a == '<' && b == '=') {
+                    return VersionRange.createFromVersionSpec("(," + range.substring(2) + "]");
+                } else {
+                    return VersionRange.createFromVersionSpec(range.substring(1));
+                }
+            } else {
+                if (a == '>') {
+                    return VersionRange.createFromVersionSpec("(" + range.substring(1) + ",)");
+                } else if (a == '<') {
+                    return VersionRange.createFromVersionSpec("(," + range.substring(1) + ")");
+                } else if (a == '*') {
+                    return VersionRange.createFromVersionSpec("(0,)");
+                } else {
+                    return VersionRange.createFromVersionSpec(range.substring(1));
+                }
+            }
+
+        } catch (InvalidVersionSpecificationException e) {
+            return ModInfo.UNBOUNDED;
+        }
     }
 
     private static String getModId(JsonObject root) {
@@ -140,10 +238,10 @@ public class FabricModJsonV1Parser {
             }
         }
 
-        return null;
+        return Collections.emptyMap();
     }
 
-    public static List<Entrypoint> getEntrypoint(JsonElement element, EntrypointEnv env) {
+    private static List<Entrypoint> getEntrypoint(JsonElement element, EntrypointEnv env) {
         if (element.isJsonArray()) {
             JsonArray entrypointsArr = element.getAsJsonArray();
             List<Entrypoint> entrypoints = new ArrayList<>(entrypointsArr.size());

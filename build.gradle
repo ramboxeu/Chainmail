@@ -56,7 +56,6 @@ minecraft {
         client {
             workingDirectory project.file('run')
 
-            // Recommended logging data for a userdev environment
             property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
 
             // Recommended logging level for the console
@@ -64,7 +63,7 @@ minecraft {
 
             mods {
                 chainmail {
-                    sources sourceSets.main
+                    sources sourceSets.locator
                 }
             }
         }
@@ -80,7 +79,7 @@ minecraft {
 
             mods {
                 chainmail {
-                    sources sourceSets.main
+                    sources sourceSets.locator
                 }
             }
         }

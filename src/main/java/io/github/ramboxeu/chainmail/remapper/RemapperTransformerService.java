@@ -15,7 +15,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class RemapperTrasfromerService implements ITransformationService {
+public class RemapperTransformerService implements ITransformationService {
     private static final Logger LOGGER = LogManager.getLogger();
     private final List<ITransformer> transformers = new ArrayList<>();
 
